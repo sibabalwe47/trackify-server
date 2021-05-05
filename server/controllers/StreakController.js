@@ -69,40 +69,47 @@ exports.getMonthAverage = asyncHandler(async (req, res) => {
       (streak) => streak.userId.toString() == req.user._id.toString()
     );
 
-    // Remove repeating habit IDs - to get exact number of recorded habits
-    const uniquedHabitIds = HelperController.habitUnitIds(userStreaks);
+    if (userStreaks.length > 0) {
+      // Remove repeating habit IDs - to get exact number of recorded habits
+      const uniquedHabitIds = HelperController.habitUnitIds(userStreaks);
 
-    // Convert set to array
-    const uniqueIdsToArray = [...uniquedHabitIds];
+      // Convert set to array
+      const uniqueIdsToArray = [...uniquedHabitIds];
 
-    // Init empty habit averages array
-    let habitAverages = [];
+      // Init empty habit averages array
+      let habitAverages = [];
 
-    // Loop through individual unique habit ID
-    for (var i = 0; i < uniqueIdsToArray.length; i++) {
-      // Store ID in variable to easily use in loop
-      const id = uniqueIdsToArray[i];
+      // Loop through individual unique habit ID
+      for (var i = 0; i < uniqueIdsToArray.length; i++) {
+        // Store ID in variable to easily use in loop
+        const id = uniqueIdsToArray[i];
 
-      // Filter returned records to match current habit ID - and than get length of array to measure records streaks
-      const numberOfStreaksInMonth = userStreaks.filter(
-        (streak) => streak.habitId.toString() == id.toString()
-      ).length;
+        // Filter returned records to match current habit ID - and than get length of array to measure records streaks
+        const numberOfStreaksInMonth = userStreaks.filter(
+          (streak) => streak.habitId.toString() == id.toString()
+        ).length;
 
-      // Query habits table to get habit data
-      const habit = await Habits.findOne({ id });
+        // Query habits table to get habit data
+        const habit = await Habits.findOne({ id });
 
-      // Here we get the entered streak goal for the habit in order to see how many streaks
-      // have been records relative to the goal
-      const streakGoal = parseInt(habit[0].streaks);
+        // Here we get the entered streak goal for the habit in order to see how many streaks
+        // have been records relative to the goal
+        const streakGoal = parseInt(habit[0].streaks);
 
-      // Calcuate the percetage
-      let average = (
-        (parseInt(numberOfStreaksInMonth) / parseInt(streakGoal)) *
-        100
-      ).toFixed(2);
+        // Calcuate the percetage
+        let average = (
+          (parseInt(numberOfStreaksInMonth) / parseInt(streakGoal)) *
+          100
+        ).toFixed(2);
 
-      // Push the calculated percentage into the habits initiated array
-      habitAverages.push(parseInt(average));
+        // Push the calculated percentage into the habits initiated array
+        habitAverages.push(parseInt(average));
+      }
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: "User has no recorded data.",
+      });
     }
 
     // Calculate the total of all habits streaks
@@ -120,7 +127,7 @@ exports.getMonthAverage = asyncHandler(async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: "The month has no habit data",
+      message: "User has no recorded data.",
     });
   }
 });
@@ -130,6 +137,8 @@ exports.getCategoryAverages = asyncHandler(async (req, res) => {
   const categories = await Category.findAll({
     userId: req.user._id,
   });
+
+  console.log(categories);
 
   if (categories.length > 0) {
     // Category averages
@@ -186,7 +195,7 @@ exports.getCategoryAverages = asyncHandler(async (req, res) => {
   } else {
     return res.status(401).json({
       success: false,
-      message: "The month has no habit data",
+      message: "User has no recorded data.",
     });
   }
 });
@@ -251,13 +260,11 @@ exports.getTopRankedHabits = asyncHandler(async (req, res) => {
       .sort((a, b) => b.average - a.average)
       .splice(1, 5);
 
-    console.log(topRankedHabits);
-
-    // // Calculate the total of all habits streaks
-    // const averageTotal = HelperController.totalNumber(habitAverages);
-
-    // // Calculate streaks average for the month
-    // const monthAverage = Math.floor(averageTotal / uniqueIdsToArray.length);
+    if (!topRankedHabits.length > 0)
+      return res.status(401).json({
+        success: true,
+        message: "User has no recorded data.",
+      });
 
     return res.status(201).json({
       success: true,
