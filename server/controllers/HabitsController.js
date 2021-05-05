@@ -17,6 +17,7 @@ exports.addHabit = asynHandler(async (req, res) => {
 
   const habits = await Habit.findOne({
     name: req.body.name,
+    userId: req.user._id,
   });
 
   if (habits.length > 0)

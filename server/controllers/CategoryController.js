@@ -65,6 +65,7 @@ exports.getSingleCategories = asyncHandler(async (req, res) => {
     return res
       .status(401)
       .send({ success: false, message: "Category does not exist" });
+
   res.json({
     success: true,
     data: {
