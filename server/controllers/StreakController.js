@@ -152,9 +152,12 @@ exports.getCategoryAverages = asyncHandler(async (req, res) => {
       );
 
       // Get number times this habits connected to this category appear in the required range
-      const streaks = await Streak.findAll({
-        userId: req.user._id,
-        categoryId: id,
+      const streaks = await Streak.findByRange({
+        field: "recordedAt",
+        options: {
+          from: req.query.from,
+          to: req.query.to,
+        },
       });
 
       const numberOfStreaksInMonth = streaks.length;
@@ -189,5 +192,81 @@ exports.getCategoryAverages = asyncHandler(async (req, res) => {
 });
 
 exports.getTopRankedHabits = asyncHandler(async (req, res) => {
-  res.send("Get top ranked habits");
+  // Get number times this habits connected to this category appear in the required range
+  const streaks = await Streak.findByRange({
+    field: "recordedAt",
+    options: {
+      from: req.query.from,
+      to: req.query.to,
+    },
+  });
+
+  // Test if range has data & calculate average for the range
+  if (streaks.length > 0) {
+    // Get streak records connected to loggedin user
+    const userStreaks = streaks.filter(
+      (streak) => streak.userId.toString() == req.user._id.toString()
+    );
+
+    // Remove repeating habit IDs - to get exact number of recorded habits
+    const uniquedHabitIds = HelperController.habitUnitIds(userStreaks);
+
+    // Convert set to array
+    const uniqueIdsToArray = [...uniquedHabitIds];
+
+    // Init empty habit averages array
+    let habitAverages = [];
+
+    // Loop through individual unique habit ID
+    for (var i = 0; i < uniqueIdsToArray.length; i++) {
+      // Store ID in variable to easily use in loop
+      const id = uniqueIdsToArray[i];
+
+      // Filter returned records to match current habit ID - and than get length of array to measure records streaks
+      const numberOfStreaksInMonth = userStreaks.filter(
+        (streak) => streak.habitId.toString() == id.toString()
+      ).length;
+
+      // Query habits table to get habit data
+      const habit = await Habits.findOne({ id });
+
+      // Here we get the entered streak goal for the habit in order to see how many streaks
+      // have been records relative to the goal
+      const streakGoal = parseInt(habit[0].streaks);
+
+      // Calcuate the percetage
+      let average = (
+        (parseInt(numberOfStreaksInMonth) / parseInt(streakGoal)) *
+        100
+      ).toFixed(2);
+
+      // Push the calculated percentage into the habits initiated array
+      habitAverages.push({
+        name: habit[0].name,
+        average: parseInt(average),
+      });
+    }
+
+    const topRankedHabits = habitAverages
+      .sort((a, b) => b.average - a.average)
+      .splice(1, 5);
+
+    console.log(topRankedHabits);
+
+    // // Calculate the total of all habits streaks
+    // const averageTotal = HelperController.totalNumber(habitAverages);
+
+    // // Calculate streaks average for the month
+    // const monthAverage = Math.floor(averageTotal / uniqueIdsToArray.length);
+
+    return res.status(201).json({
+      success: true,
+      data: topRankedHabits,
+    });
+  } else {
+    return res.status(401).json({
+      success: false,
+      message: "The month has no habit data",
+    });
+  }
 });
