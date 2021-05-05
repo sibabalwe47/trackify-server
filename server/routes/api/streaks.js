@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const StreakController = require("../../controllers/StreakController");
 const auth = require("../../middleware/authToken");
+const { validateUserStreakItems } = require("../../middleware/validators");
 
 /*
      URL:           /api/streaks/add
      METHOD:        POST
      Description:   Allows user to get stats by month
  */
-router.post("/add", auth, StreakController.addStreak);
+router.post("/add", auth, validateUserStreakItems, StreakController.addStreak);
 
 /*
      URL:           /api/streaks/month

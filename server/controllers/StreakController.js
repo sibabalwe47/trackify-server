@@ -4,20 +4,34 @@ const Streak = new DatabaseController("streaks");
 const Habits = new DatabaseController("habits");
 const Category = new DatabaseController("categories");
 const HelperController = require("../helpers/HelperController");
+const { validationResult } = require("express-validator");
 
 exports.addStreak = asyncHandler(async (req, res) => {
-  const { streakItems } = req.body;
-  let counter = 0;
+  // Validation errors
+  const errors = validationResult(req);
 
+  if (!errors.isEmpty())
+    return res.status(400).json({
+      success: false,
+      errors: errors.array(),
+    });
+
+  // Get streak items sent from client
+  const { streakItems } = req.body;
+
+  //
   if (streakItems) {
-    // Loop through current items
+    // Loop through current streak item
     streakItems.forEach(async (item) => {
+      // Check if this has been recorded in streaks table
       const result = await Streak.findOne({
         recordedAt: req.body.recordedAt,
         habitId: item.habitId,
         categoryId: item.categoryId,
         userId: req.user._id,
       });
+
+      // Check result length
       if (result.length == 0) {
         // Add to streak table
         const streak = await Streak.create({
