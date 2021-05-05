@@ -25,4 +25,11 @@ router.get("/month", auth, StreakController.getMonthAverage);
  */
 router.get("/categories", auth, StreakController.getCategoryAverages);
 
+/*
+     URL:           /api/streaks/habits
+     METHOD:        GET
+     Description:   Allows user to get top five performing habits
+ */
+router.get("/habits", auth, StreakController.getTopRankedHabits);
+
 module.exports = router;
