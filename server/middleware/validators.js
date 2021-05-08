@@ -10,7 +10,7 @@ exports.validateUserRegistration = [
 ];
 
 exports.validateUserLogin = [
-  check("emailAddress").isEmail().withMessage("Please provide a valid email."),
+  check("emailAddress").notEmpty().withMessage("Please provide a valid email."),
   check("password")
     .isLength({ min: 6 })
     .withMessage("Password field cannot be empty"),
