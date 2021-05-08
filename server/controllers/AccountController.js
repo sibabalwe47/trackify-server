@@ -119,3 +119,30 @@ exports.loginUser = asyncHandler(async (req, res) => {
     token,
   });
 });
+
+exports.getUserAccount = asyncHandler(async (req, res) => {
+  console.log(req.user._id);
+  // Check if user exists
+  const account = await Accounts.findOne({
+    id: req.user._id,
+  });
+
+  // User does not exist case
+  if (account.length === 0)
+    return res.status(400).json({
+      success: false,
+      message: "Account not exist",
+    });
+
+  res.json({
+    success: true,
+    message: "Logged in successfully",
+    user: {
+      id: account[0].id,
+      firstName: account[0].firstName,
+      lastName: account[0].lastName,
+      emailAddress: account[0].emailAddress,
+      avatar: account[0].avatar,
+    },
+  });
+});
