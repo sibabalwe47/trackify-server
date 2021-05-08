@@ -41,7 +41,6 @@ exports.addStreak = asyncHandler(async (req, res) => {
           userId: req.user._id,
         });
       } else {
-        console.log("Already exists");
       }
     });
 
@@ -136,8 +135,6 @@ exports.getCategoryAverages = asyncHandler(async (req, res) => {
   const categories = await Category.findAll({
     userId: req.user._id,
   });
-
-  console.log(categories);
 
   if (categories.length > 0) {
     // Category averages

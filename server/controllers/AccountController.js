@@ -121,7 +121,6 @@ exports.loginUser = asyncHandler(async (req, res) => {
 });
 
 exports.getUserAccount = asyncHandler(async (req, res) => {
-  console.log(req.user._id);
   // Check if user exists
   const account = await Accounts.findOne({
     id: req.user._id,
