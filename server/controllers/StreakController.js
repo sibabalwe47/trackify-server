@@ -107,12 +107,30 @@ exports.getMonthAverage = asyncHandler(async (req, res) => {
       // Calculate the total of all habits streaks
       const averageTotal = HelperController.totalNumber(habitAverages);
 
+      // Determine result type - Poort, Moderate, Good
+      const averageGrade = (averageTotal) => {
+        switch (averageTotal) {
+          case averageTotal <= 50:
+            return "Poor";
+
+          case averageTotal > 50 && averageTotal <= 80:
+            return "Moderate";
+
+          case averageTotal > 81:
+            return "Good";
+
+          default:
+            return "Poor";
+        }
+      };
+
       // Calculate streaks average for the month
       const monthAverage = Math.floor(averageTotal / uniqueIdsToArray.length);
 
       return res.status(201).json({
         success: true,
         data: {
+          grade: averageGrade(),
           monthlyStats: monthAverage,
         },
       });
@@ -247,6 +265,7 @@ exports.getTopRankedHabits = asyncHandler(async (req, res) => {
 
       // Push the calculated percentage into the habits initiated array
       habitAverages.push({
+        id,
         name: habit[0].name,
         average: parseInt(average),
       });
